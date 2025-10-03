@@ -6,7 +6,7 @@ from environment.sentiment_env import SentimentEnv
 X_train, y_train, X_test, y_test = load_and_preprocess_imdb(num_words=10000, maxlen=200)
 X_tr, X_val, y_tr, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
-env = SentimentEnv(X_tr, y_tr, X_val, y_val, step_epochs=1, max_steps=10, verbose=True)
+env = SentimentEnv(X_tr, y_tr, X_val, y_val, step_epochs=1, max_steps=2, verbose=True)
 
 state = env.reset()
 

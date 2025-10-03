@@ -15,7 +15,7 @@ def train_baseline():
     # Train model
     history = model.fit(
         X_train, y_train,
-        epochs=5,
+        epochs=2,
         batch_size=64,
         validation_data=(X_val, y_val),
         verbose=1
