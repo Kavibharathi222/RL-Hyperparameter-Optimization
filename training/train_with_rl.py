@@ -108,6 +108,7 @@ for ep in range(episodes):
         if done:
             print("🛑 Training stopped (done=True). Saving current model...")
             env.model.save(final_model_path)
+            break
 
     print(f"[EPISODE {ep + 1}] Total Reward = {total_reward:.2f} | Best Val Accuracy = {best_val_acc:.4f}")
     rewards_log.append(total_reward)
