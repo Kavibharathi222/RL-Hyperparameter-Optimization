@@ -1,9 +1,3 @@
-"""
-environment/sentiment_env.py
-
-A lightweight RL environment wrapper around Keras model training for sentiment analysis.
-"""
-
 import copy
 import csv
 import os
@@ -18,7 +12,7 @@ from tensorflow.keras import backend as K
 
 def safe_append_csv(log_file, row):
     """Safe append to CSV (handles file lock issues)."""
-    for _ in range(2):
+    for _ in range(5):
         try:
             with open(log_file, mode="a", newline="") as f:
                 writer = csv.writer(f)
@@ -84,34 +78,22 @@ class SentimentEnv:
         self.prev_val_loss = 1.0
         self.best_val_acc = 0.0
 
-        # CSV logging setup
+        # log file
         self.LOG_FILE = "results/accuracy_logs.csv"
-        os.makedirs(os.path.dirname(self.LOG_FILE), exist_ok=True)
-        if not os.path.exists(self.LOG_FILE) or os.stat(self.LOG_FILE).st_size == 0:
-            with open(self.LOG_FILE, mode="w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    "step", "epoch",
-                    "train_loss", "train_accuracy",
-                    "val_loss", "val_accuracy",
-                    "reward", "best_val_accuracy",
-                    "learning_rate", "batch_size", "dropout"
-                ])
 
         # build initial model
         self.model = self._build_model(self.current_hyperparams)
 
     def _build_model(self, hyperparams):
-        """Builds and compiles a BiLSTM model using the provided hyperparams."""
         model = Sequential()
-        model.add(Embedding(input_dim=self.input_dim, output_dim=self.embedding_dim, input_length=self.maxlen))
+        model.add(Embedding(input_dim=self.input_dim, output_dim=self.embedding_dim))
         model.add(Bidirectional(LSTM(self.lstm_units, return_sequences=False)))
-        model.add(Dropout(hyperparams.get("dropout", self.default_hyperparams["dropout"])))
+        model.add(Dropout(float(hyperparams.get("dropout", 0.5))))
         model.add(Dense(self.dense_units, activation="relu"))
-        model.add(Dropout(hyperparams.get("dropout", self.default_hyperparams["dropout"])))
+        model.add(Dropout(float(hyperparams.get("dropout", 0.5))))
         model.add(Dense(1, activation="sigmoid"))
 
-        opt = Adam(learning_rate=hyperparams.get("lr", self.default_hyperparams["lr"]))
+        opt = Adam(learning_rate=float(hyperparams.get("lr", 1e-3)))
         model.compile(optimizer=opt, loss="binary_crossentropy", metrics=["accuracy"])
         return model
 
@@ -130,58 +112,43 @@ class SentimentEnv:
     def _get_state(self):
         return [float(self.prev_val_acc), float(self.prev_val_loss), float(self.epoch)]
 
-    def step(self, action):
+    def step(self, action=None):
+        # ✅ Enforce correct types
+        self.current_hyperparams["lr"] = float(self.current_hyperparams.get("lr", 1e-3))
+        self.current_hyperparams["batch_size"] = int(self.current_hyperparams.get("batch_size", 64))
+        self.current_hyperparams["dropout"] = float(self.current_hyperparams.get("dropout", 0.5))
+
         if action is None:
             action = {}
-        if not isinstance(action, dict):
-            raise ValueError("Action expected as dict: e.g. {'lr':1e-3, 'batch_size':64}.")
 
-        # Handle hyperparam changes
-        rebuild_required = False
-        old_weights = None
-
-        if "dropout" in action:
-            new_dropout = float(action["dropout"])
-            if abs(new_dropout - self.current_hyperparams.get("dropout", 0.0)) > 1e-6:
-                if self.verbose:
-                    print(f"[ENV] Changing dropout: {self.current_hyperparams.get('dropout')} -> {new_dropout}")
-                try:
-                    old_weights = self.model.get_weights()
-                except Exception:
-                    old_weights = None
-                self.current_hyperparams["dropout"] = new_dropout
-                rebuild_required = True
-
+        # update hyperparams safely
         if "lr" in action:
-            new_lr = float(action["lr"])
-            try:
-                K.set_value(self.model.optimizer.learning_rate, new_lr)
-                self.current_hyperparams["lr"] = new_lr
-            except Exception:
-                self.current_hyperparams["lr"] = new_lr
-                rebuild_required = True
+            self.current_hyperparams["lr"] = float(action["lr"])
+            new_lr = float(self.current_hyperparams["lr"])
+            if hasattr(self.model.optimizer.learning_rate, "assign"):
+                self.model.optimizer.learning_rate.assign(new_lr)
+            else:
+                self.model.optimizer.learning_rate = new_lr
+
+
+    # ✅ Safe update for both tf.Variable and float cases
+    # if hasattr(self.model.optimizer.learning_rate, "assign"):
+    #     self.model.optimizer.learning_rate.assign(new_lr)
+    # # else:
+    #     self.model.optimizer.learning_rate = new_lr
+
 
         if "batch_size" in action:
-            new_bs = int(action["batch_size"])
-            if new_bs <= 0:
-                raise ValueError("batch_size must be positive int")
-            self.current_hyperparams["batch_size"] = new_bs
+            self.current_hyperparams["batch_size"] = int(action["batch_size"])
 
-        if rebuild_required:
+        if "dropout" in action:
+            self.current_hyperparams["dropout"] = float(action["dropout"])
             self.model = self._build_model(self.current_hyperparams)
-            if old_weights is not None:
-                try:
-                    self.model.set_weights(old_weights)
-                except Exception:
-                    pass
 
         requested_stop = bool(action.get("stop", False))
 
-        bs = int(self.current_hyperparams.get("batch_size", self.default_hyperparams["batch_size"]))
+        bs = int(self.current_hyperparams["batch_size"])
         epochs_to_train = int(self.step_epochs)
-
-        if len(self.X_train) == 0:
-            raise RuntimeError("Empty training dataset in environment.")
 
         history = self.model.fit(
             self.X_train,
@@ -212,6 +179,27 @@ class SentimentEnv:
             done = True
             reward += 5.0
 
+        # logging
+        if not os.path.exists(self.LOG_FILE):
+            with open(self.LOG_FILE, mode="w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    "step", "epoch", "train_loss", "train_accuracy",
+                    "val_loss", "val_accuracy", "reward", "best_val_accuracy",
+                    "learning_rate", "batch_size", "dropout"
+                ])
+
+        train_loss = history.history["loss"][-1] if "loss" in history.history else None
+        train_acc = history.history["accuracy"][-1] if "accuracy" in history.history else None
+
+        safe_append_csv(self.LOG_FILE, [
+            self.step_count, self.epoch, train_loss, train_acc,
+            val_loss, val_acc, reward, self.best_val_acc,
+            float(self.current_hyperparams['lr']),
+            int(self.current_hyperparams['batch_size']),
+            float(self.current_hyperparams['dropout'])
+        ])
+
         info = {
             "val_accuracy": float(val_acc),
             "val_loss": float(val_loss),
@@ -219,27 +207,7 @@ class SentimentEnv:
             "step_count": int(self.step_count),
             "hyperparams": copy.deepcopy(self.current_hyperparams),
             "best_val_accuracy": float(self.best_val_acc),
-            "history_last": {k: v[-1] for k, v in history.history.items()} if hasattr(history, "history") else {},
         }
-
-        # log row
-        train_loss = history.history["loss"][-1] if "loss" in history.history else None
-        train_acc = history.history["accuracy"][-1] if "accuracy" in history.history else None
-
-        safe_append_csv(self.LOG_FILE, [
-            self.step_count,
-            self.epoch,
-            train_loss,
-            train_acc,
-            val_loss,
-            val_acc,
-            reward,
-            self.best_val_acc,
-            self.current_hyperparams['lr'],
-            self.current_hyperparams['batch_size'],
-            self.current_hyperparams['dropout']
-        ])
-
         return self._get_state(), float(reward), bool(done), info
 
     def render(self):
