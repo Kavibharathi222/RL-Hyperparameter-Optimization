@@ -44,7 +44,7 @@ print(f"[INFO] Action space size: {len(action_space)}")
 env = SentimentEnv(
     X_train, y_train, X_val, y_val,
     step_epochs=1,
-    max_steps=10,
+    max_steps=2,
     target_accuracy=0.87,
     verbose=True
 )
@@ -69,7 +69,7 @@ agent = DQNAgent(
 # -----------------------------
 # 4️⃣ DQN Training Loop
 # -----------------------------
-episodes = 5
+episodes = 1
 rewards_log = []
 best_val_acc = 0.0
 
@@ -115,13 +115,15 @@ print(f"💾 Final model saved to {final_model_path}")
 # -----------------------------
 # 5️⃣ Plot Rewards per Episode
 # -----------------------------
+os.makedirs("results/plots", exist_ok=True)
 plt.figure(figsize=(8, 5))
 plt.plot(range(1, len(rewards_log) + 1), rewards_log, marker="o", color="blue")
 plt.title("DQN Training Rewards per Episode")
 plt.xlabel("Episode")
 plt.ylabel("Total Reward")
 plt.grid(True)
-plt.show()
-os.makedirs("results/plots", exist_ok=True)
 plt.savefig("results/plots/RL.png")  
+plt.show()
+
+
 plt.close()

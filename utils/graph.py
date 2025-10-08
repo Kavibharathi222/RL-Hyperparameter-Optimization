@@ -40,7 +40,9 @@ def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
     plt.legend()
 
     plt.tight_layout()
-    plt.show()
+   
     
-    plt.savefig("results/plots/Base.png")  
+    plt.savefig("results/plots/Base.png")
+    plt.show()  
+    print("Image is saved in graph.py")
     plt.close()

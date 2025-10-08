@@ -37,9 +37,11 @@ def plot_training_logs():
 
 
     plt.tight_layout()
-    plt.show()
+    
     plt.savefig("results/plots/example_plot.png") 
-
+    plt.show()
+    print("It is save in Visualization")
+    plt.close()
 # Usage
 plot_training_logs()
 

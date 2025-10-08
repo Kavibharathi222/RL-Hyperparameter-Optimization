@@ -19,7 +19,7 @@ def train_baseline():
     print("🔹 Training model...")
     history = model.fit(
         X_train, y_train,
-        epochs=50,
+        epochs=2,
         batch_size=64,
         validation_data=(X_val, y_val),
         verbose=1
@@ -48,7 +48,7 @@ def train_baseline():
 
     # 🔸 Save model in pickle format
     os.makedirs("models/saved_models", exist_ok=True)
-    model_path = "results/baseline_model.pkl"
+    model_path = "results/baseline_model.h5"
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
     print(f"✅ Model saved successfully at: {model_path}")
