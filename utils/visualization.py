@@ -1,10 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import os 
 
 def plot_training_logs():
     # Hardcoded CSV file path
     csv_file = r"D:\MiniProject\Project\RL-Hyperparameter-Optimization\results\accuracy_logs.csv"
-    
+    os.makedirs("results/plots", exist_ok=True)
     # Read the CSV
     logs = pd.read_csv(csv_file)
 
@@ -37,6 +38,7 @@ def plot_training_logs():
 
     plt.tight_layout()
     plt.show()
+    plt.savefig("results/plots/example_plot.png") 
 
 # Usage
 plot_training_logs()
