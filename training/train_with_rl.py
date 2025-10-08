@@ -60,7 +60,7 @@ agent = DQNAgent(
     epsilon=1.0,
     epsilon_min=0.05,
     epsilon_decay=0.9,
-    batch_size=16,
+    batch_size=32,
     memory_size=1000,
     target_update_freq=5
 )
@@ -73,8 +73,8 @@ episodes = 1
 rewards_log = []
 best_val_acc = 0.0
 
-best_model_path = "models/best_model.h5"
-final_model_path = "models/final_model.h5"
+best_model_path = "SavedModels/best_model.keras"
+final_model_path = "SavedModels/final_model.keras"
 
 for ep in range(episodes):
     print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
