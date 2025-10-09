@@ -116,13 +116,30 @@ print(f"💾 Final model saved to {final_model_path}")
 # -----------------------------
 # 5️⃣ Plot Rewards per Episode
 # -----------------------------
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read your log file (CSV or TSV). Adjust delimiter if needed ("," or "\t")
+log_file = "results/accuracy_logs.csv"   # update with your actual file path
+df = pd.read_csv(log_file)
+print(df.columns.tolist())
+print(df.head())
+
+# Extract columns
+epochs = df["epoch"]
+train_loss = df["train_loss"]
+val_loss = df["val_loss"]
+train_acc = df["train_accuracy"]
+val_acc = df["val_accuracy"]
+
+# Create folder if not exists
 os.makedirs("results/plots", exist_ok=True)
-# step	epoch	train_loss	train_accuracy"	val_loss	val_accuracy	reward	best_val_accuracy	learning_rate	droupout	droupout
 
 # --- Plot 1: Training vs Validation Loss ---
 plt.figure(figsize=(8, 5))
-plt.plot(range(1, len(train_loss) + 1), train_loss, label="Training Loss", marker="o")
-plt.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s")
+plt.plot(epochs, train_loss, label="Training Loss", marker="o")
+plt.plot(epochs, val_loss, label="Validation Loss", marker="s")
 plt.title("Training vs Validation Loss")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
@@ -133,8 +150,8 @@ plt.show()
 
 # --- Plot 2: Training vs Validation Accuracy ---
 plt.figure(figsize=(8, 5))
-plt.plot(range(1, len(train_accuracy) + 1), train_accuracy, label="Training Accuracy", marker="o")
-plt.plot(range(1, len(val_accuracy) + 1), val_accuracy, label="Validation Accuracy", marker="s")
+plt.plot(epochs, train_acc, label="Training Accuracy", marker="o")
+plt.plot(epochs, val_acc, label="Validation Accuracy", marker="s")
 plt.title("Training vs Validation Accuracy")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
@@ -142,6 +159,5 @@ plt.grid(True)
 plt.legend()
 plt.savefig("results/plots/accuracy_plot.png")
 plt.show()
-
 
 plt.close()
