@@ -114,42 +114,7 @@ class SentimentEnv:
         if action is None:
             action = {}
 
-        # Scale current hyperparameters dynamically
-        if "lr" in action:
-            old_lr = self.current_hyperparams["lr"]
-            new_lr = max(old_lr * float(action["lr"]), 1e-6)
-            self.current_hyperparams["lr"] = new_lr
-            if hasattr(self.model.optimizer.learning_rate, "assign"):
-                self.model.optimizer.learning_rate.assign(new_lr)
-            else:
-                self.model.optimizer.learning_rate = new_lr
-            if self.verbose:
-                print(f"[ENV] LR adjusted: {old_lr:.6f} -> {new_lr:.6f}")
-
-        if "batch_size" in action:
-            old_bs = self.current_hyperparams["batch_size"]
-            new_bs = int(min(max(old_bs * float(action["batch_size"]), 16), 256))
-            self.current_hyperparams["batch_size"] = new_bs
-            if self.verbose:
-                print(f"[ENV] Batch size adjusted: {old_bs} -> {new_bs}")
-
-        if "dropout" in action:
-            old_dp = self.current_hyperparams["dropout"]
-            new_dp = float(np.clip(old_dp * float(action["dropout"]), 0.1, 0.7))
-            if abs(new_dp - old_dp) > 1e-4:
-                old_weights = self.model.get_weights()
-                self.current_hyperparams["dropout"] = new_dp
-                self.model = self._build_model(self.current_hyperparams)
-                try:
-                    self.model.set_weights(old_weights)
-                except Exception:
-                    pass
-                if self.verbose:
-                    print(f"[ENV] Dropout adjusted: {old_dp:.2f} -> {new_dp:.2f}")
-
-        requested_stop = bool(action.get("stop", False))
-
-        # Train model
+        # --- Train model ---
         bs = self.current_hyperparams["batch_size"]
         history = self.model.fit(
             self.X_train, self.y_train,
@@ -162,6 +127,7 @@ class SentimentEnv:
         self.epoch += self.step_epochs
         self.step_count += 1
 
+        # Evaluate
         val_loss, val_acc = self.model.evaluate(self.X_val, self.y_val, verbose=0)
         delta_acc = val_acc - self.prev_val_acc
         reward = delta_acc * self.reward_scaling
@@ -169,22 +135,43 @@ class SentimentEnv:
         self.prev_val_acc = val_acc
         self.prev_val_loss = val_loss
         self.best_val_acc = max(self.best_val_acc, val_acc)
+        print("Learning Rate ",self.current_hyperparams["lr"])
+        print("Droup Out ",self.current_hyperparams["dropout"])
+        print("Droupout ", self.current_hyperparams["batch_size"])
+        # --- 🔑 Adjust hyperparameters if reward is negative ---
+        if reward < 0:
+            # Reduce LR a bit
+            old_lr = self.current_hyperparams["lr"]
+            new_lr = max(old_lr * 0.8, 1e-6)
+            self.current_hyperparams["lr"] = new_lr
+            if hasattr(self.model.optimizer.learning_rate, "assign"):
+                self.model.optimizer.learning_rate.assign(new_lr)
+            else:
+                self.model.optimizer.learning_rate = new_lr
+            if self.verbose:
+                print(f"[ENV] Reward < 0 → LR reduced {old_lr:.6f} → {new_lr:.6f}")
 
-        done = requested_stop or self.step_count >= self.max_steps
+            # Adjust dropout slightly
+            old_dp = self.current_hyperparams["dropout"]
+            new_dp = float(np.clip(old_dp * 1.1, 0.1, 0.7))
+            self.current_hyperparams["dropout"] = new_dp
+            if abs(new_dp - old_dp) > 1e-4:
+                old_weights = self.model.get_weights()
+                self.model = self._build_model(self.current_hyperparams)
+                try:
+                    self.model.set_weights(old_weights)
+                except Exception:
+                    pass
+            if self.verbose:
+                print(f"[ENV] Reward < 0 → Dropout adjusted {old_dp:.2f} → {new_dp:.2f}")
+
+        # --- Check stopping ---
+        done = self.step_count >= self.max_steps
         if self.target_accuracy and val_acc >= self.target_accuracy:
             reward += 5.0
             done = True
 
-        # Logging
-        if not os.path.exists(self.LOG_FILE):
-            with open(self.LOG_FILE, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    "step", "epoch", "train_loss", "train_accuracy",
-                    "val_loss", "val_accuracy", "reward", "best_val_accuracy",
-                    "learning_rate", "batch_size", "dropout"
-                ])
-
+        # --- Logging ---
         train_loss = history.history["loss"][-1]
         train_acc = history.history["accuracy"][-1]
 
@@ -196,10 +183,6 @@ class SentimentEnv:
             self.current_hyperparams["dropout"]
         ])
 
-        if self.verbose:
-            print(f"[ENV] Step {self.step_count} | Epoch={self.epoch} | "
-                  f"ValAcc={val_acc:.4f} | Reward={reward:.4f} | Params={self.current_hyperparams}")
-
         info = {
             "val_accuracy": val_acc,
             "val_loss": val_loss,
@@ -210,6 +193,7 @@ class SentimentEnv:
         }
 
         return self._get_state(), reward, done, info
+
 
     def render(self):
         print(f"Epoch: {self.epoch}, Step: {self.step_count}, "

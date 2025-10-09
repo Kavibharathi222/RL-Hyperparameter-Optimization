@@ -60,7 +60,7 @@ agent = DQNAgent(
     epsilon=1.0,
     epsilon_min=0.05,
     epsilon_decay=0.9,
-    batch_size=16,
+    batch_size=32,
     memory_size=1000,
     target_update_freq=5
 )
@@ -73,8 +73,8 @@ episodes = 1
 rewards_log = []
 best_val_acc = 0.0
 
-best_model_path = "models/best_model.h5"
-final_model_path = "models/final_model.h5"
+best_model_path = "SavedModels/best_model.keras"
+final_model_path = "SavedModels/final_model.keras"
 
 for ep in range(episodes):
     print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
@@ -116,13 +116,30 @@ print(f"💾 Final model saved to {final_model_path}")
 # 5️⃣ Plot Rewards per Episode
 # -----------------------------
 os.makedirs("results/plots", exist_ok=True)
+# step	epoch	train_loss	train_accuracy"	val_loss	val_accuracy	reward	best_val_accuracy	learning_rate	droupout	droupout
+
+# --- Plot 1: Training vs Validation Loss ---
 plt.figure(figsize=(8, 5))
-plt.plot(range(1, len(rewards_log) + 1), rewards_log, marker="o", color="blue")
-plt.title("DQN Training Rewards per Episode")
-plt.xlabel("Episode")
-plt.ylabel("Total Reward")
+plt.plot(range(1, len(train_loss) + 1), train_loss, label="Training Loss", marker="o")
+plt.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s")
+plt.title("Training vs Validation Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
 plt.grid(True)
-plt.savefig("results/plots/RL.png")  
+plt.legend()
+plt.savefig("results/plots/loss_plot.png")
+plt.show()
+
+# --- Plot 2: Training vs Validation Accuracy ---
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, len(train_accuracy) + 1), train_accuracy, label="Training Accuracy", marker="o")
+plt.plot(range(1, len(val_accuracy) + 1), val_accuracy, label="Validation Accuracy", marker="s")
+plt.title("Training vs Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.grid(True)
+plt.legend()
+plt.savefig("results/plots/accuracy_plot.png")
 plt.show()
 
 

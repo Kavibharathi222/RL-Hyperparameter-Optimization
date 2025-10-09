@@ -7,7 +7,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 # -------------------------
 
 # Load baseline model
-baseline_model = tf.keras.models.load_model("results/baseline_model.pkl")
+baseline_model = tf.keras.models.load_model("models/saved_models/baseline_model.h5")
 
 # Load RL-trained model
 rl_model = tf.keras.models.load_model("results/rl_trained_model.h5")
