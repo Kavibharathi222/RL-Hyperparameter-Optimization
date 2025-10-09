@@ -1,1 +1,1 @@
-step,epoch,train_loss,train_accuracy",val_loss,val_accuracy,reward,best_val_accuracy,learning_rate,droupout,droupout
+step,epoch,train_loss,train_accuracy,val_loss,val_accuracy,reward,best_val_accuracy,learning_rate,droupout

@@ -72,12 +72,13 @@ agent = DQNAgent(
 episodes = 1
 rewards_log = []
 best_val_acc = 0.0
-
+numofepoch =0
 best_model_path = "SavedModels/best_model.keras"
 final_model_path = "SavedModels/final_model.keras"
 
 for ep in range(episodes):
     print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
+    
     state = env.reset()
     done = False
     total_reward = 0
