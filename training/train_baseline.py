@@ -47,14 +47,18 @@ def train_baseline():
     print(f"📊 Training metrics saved to {log_file}")
 
     # 🔸 Save model in pickle format
-    os.makedirs("models/saved_models", exist_ok=True)
-    model_path = "results/baseline_model.pkl"
-    with open(model_path, "wb") as f:
-        pickle.dump(model, f)
+    # os.makedirs("models/saved_models", exist_ok=True)
+    # model_path = "results/baseline_model.h5"
+    # with open(model_path, "wb") as f:
+    #     pickle.dump(model, f)
+    # print(f"✅ Model saved successfully at: {model_path}")
+    os.makedirs("SavedModels", exist_ok=True)
+    model_path = "SavedModels/baseline_model.h5"
+    model.save(model_path)  
     print(f"✅ Model saved successfully at: {model_path}")
 
     # Also save tokenizer (important for manual testing)
-    tokenizer_path = "results/tokenizer_basemodel.pkl"
+    tokenizer_path = "SavedModels/tokenizer_basemodel.pkl"
     with open(tokenizer_path, "wb") as f:
         pickle.dump(tokenizer, f)
     print(f"✅ Tokenizer saved successfully at: {tokenizer_path}")

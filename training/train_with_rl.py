@@ -1,89 +1,164 @@
 import os
 import pickle
 import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.model_selection import train_test_split
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
 from environment.sentiment_env import SentimentEnv
+from models.rl_agent import DQNAgent
+from utils.plot_utils import plot_training_logs
 
-# ===============================
-# 1️⃣ Load and Preprocess Dataset
-# ===============================
-print("🔹 Loading and preprocessing IMDB dataset...")
+# -----------------------------
+# 1️⃣ Load & Preprocess Dataset
+# -----------------------------
+print("[INFO] Loading and preprocessing IMDB dataset...")
 X_train, y_train, X_test, y_test, tokenizer = load_and_preprocess_imdb(num_words=10000, maxlen=200)
 
-# Split training into train/validation
-X_tr, X_val, y_tr, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+# Split for validation
+X_val, y_val = X_train[:5000], y_train[:5000]
+X_train, y_train = X_train[5000:], y_train[5000:]
 
-# ===================================
-# 2️⃣ Initialize RL Environment
-# ===================================
-print("🔹 Initializing RL Environment...")
+os.makedirs("models", exist_ok=True)
+with open("models/tokenizer.pkl", "wb") as f:
+    pickle.dump(tokenizer, f)
+print("✅ Tokenizer saved to models/tokenizer.pkl")
+
+
+# -----------------------------
+# 2️⃣ Define Action Space (Scaling-based)
+# -----------------------------
+lr_factors = [0.5, 0.8, 1.0, 1.2, 1.5]
+batch_factors = [0.5, 1.0, 1.5, 2.0]
+dropout_factors = [0.8, 1.0, 1.2]
+
+action_space = [
+    {"lr": lr, "batch_size": bs, "dropout": dr}
+    for lr in lr_factors
+    for bs in batch_factors
+    for dr in dropout_factors
+]
+print(f"[INFO] Action space size: {len(action_space)}")
+
+
+# -----------------------------
+# 3️⃣ Initialize Environment + Agent
+# -----------------------------
 env = SentimentEnv(
-    X_tr,
-    y_tr,
-    X_val,
-    y_val,
-    step_epochs=1,   # how many epochs per step
-    max_steps=5,     # total RL steps (you can increase)
+    X_train, y_train, X_val, y_val,
+    step_epochs=1,
+    max_steps=2,
+    target_accuracy=0.87,
     verbose=True
 )
 
-# Reset environment
-state = env.reset()
+state_size = 3
+action_size = len(action_space)
 
-# ===================================
-# 3️⃣ Manual RL Action Loop
-# ===================================
-print("🔹 Starting RL Agent training loop...")
+agent = DQNAgent(
+    state_size=state_size,
+    action_size=action_size,
+    lr=0.001,
+    gamma=0.95,
+    epsilon=1.0,
+    epsilon_min=0.05,
+    epsilon_decay=0.9,
+    batch_size=32,
+    memory_size=1000,
+    target_update_freq=5
+)
 
-actions = [
-    {"lr": 1e-3, "batch_size": 64},
-    {"lr": 5e-4},                  # lower learning rate
-    {"dropout": 0.6},              # change dropout
-    {"lr": 1e-4, "batch_size": 32},
-    {"stop": True},                # stop manually
-]
 
-for a in actions:
-    next_state, reward, done, info = env.step(a)
-    print("Step result:", info)
-    if done:
-        break
+# -----------------------------
+# 4️⃣ DQN Training Loop
+# -----------------------------
+episodes = 1
+rewards_log = []
+best_val_acc = 0.0
+numofepoch =0
+best_model_path = "SavedModels/best_model.keras"
+final_model_path = "SavedModels/final_model.keras"
 
-print("✅ RL Training completed successfully!")
+for ep in range(episodes):
+    print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
+    
+    state = env.reset()
+    done = False
+    total_reward = 0
 
-# ===================================
-# 4️⃣ Save Model and Tokenizer
-# ===================================
-os.makedirs("results", exist_ok=True)
+    while not done:
+        action_idx = agent.act(state)
+        action = action_space[action_idx]
 
-model_path = "results/rl_trained_model.pkl"
-with open(model_path, "wb") as f:
-    pickle.dump(env.model, f)
-print(f"✅ Model saved at: {model_path}")
+        next_state, reward, done, info = env.step(action)
+        agent.remember(state, action_idx, reward, next_state, done)
+        agent.replay()
 
-tokenizer_path = "results/tokenizer.pkl"
-with open(tokenizer_path, "wb") as f:
-    pickle.dump(tokenizer, f)
-print(f"✅ Tokenizer saved at: {tokenizer_path}")
+        state = next_state
+        total_reward += reward
 
-# ===================================
-# 5️⃣ Plot Metrics from CSV
-# ===================================
-csv_path = "results/accuracy_logs.csv"
-if os.path.exists(csv_path):
-    logs = pd.read_csv(csv_path)
+        if info["val_accuracy"] > best_val_acc:
+            best_val_acc = info["val_accuracy"]
+            env.model.save(best_model_path)
+            print(f"💾 [SAVE] New best model (val_acc={best_val_acc:.4f})")
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(logs['epoch'], logs['val_accuracy'], label="Validation Accuracy")
-    plt.plot(logs['epoch'], logs['reward'], label="Reward")
-    plt.xlabel("Epoch")
-    plt.ylabel("Value")
-    plt.title("RL Hyperparameter Optimization Progress")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-else:
-    print("⚠️ Log file not found. Please ensure training completed successfully.")
+        if done:
+            print("🛑 Training stopped (done=True). Saving current model...")
+            env.model.save(final_model_path)
+            break
+
+    print(f"[EPISODE {ep + 1}] Total Reward = {total_reward:.2f} | Best Val Acc = {best_val_acc:.4f}")
+    rewards_log.append(total_reward)
+
+print("\n✅ Training completed successfully!")
+print(f"🏆 Best validation accuracy: {best_val_acc:.4f}")
+env.model.save(final_model_path)
+print(f"💾 Final model saved to {final_model_path}")
+
+plot_training_logs(csv_path="results/accuracy_logs.csv", save_dir="results/plots")
+
+# -----------------------------
+# 5️⃣ Plot Rewards per Episode
+# -----------------------------
+# import os
+# import pandas as pd
+# import matplotlib.pyplot as plt
+
+# # Read your log file (CSV or TSV). Adjust delimiter if needed ("," or "\t")
+# log_file = "results/accuracy_logs.csv"   # update with your actual file path
+# df = pd.read_csv(log_file)
+# print(df.columns.tolist())
+# print(df.head())
+
+# # Extract columns
+# epochs = df["epoch"]
+# train_loss = df["train_loss"]
+# val_loss = df["val_loss"]
+# train_acc = df["train_accuracy"]
+# val_acc = df["val_accuracy"]
+
+# # Create folder if not exists
+# os.makedirs("results/plots", exist_ok=True)
+
+# # --- Plot 1: Training vs Validation Loss ---
+# plt.figure(figsize=(8, 5))
+# plt.plot(epochs, train_loss, label="Training Loss", marker="o")
+# plt.plot(epochs, val_loss, label="Validation Loss", marker="s")
+# plt.title("Training vs Validation Loss")
+# plt.xlabel("Epoch")
+# plt.ylabel("Loss")
+# plt.grid(True)
+# plt.legend()
+# plt.savefig("results/plots/loss_plot.png")
+# plt.show()
+
+# # --- Plot 2: Training vs Validation Accuracy ---
+# plt.figure(figsize=(8, 5))
+# plt.plot(epochs, train_acc, label="Training Accuracy", marker="o")
+# plt.plot(epochs, val_acc, label="Validation Accuracy", marker="s")
+# plt.title("Training vs Validation Accuracy")
+# plt.xlabel("Epoch")
+# plt.ylabel("Accuracy")
+# plt.grid(True)
+# plt.legend()
+# plt.savefig("results/plots/accuracy_plot.png")
+# plt.show()
+
+# plt.close()

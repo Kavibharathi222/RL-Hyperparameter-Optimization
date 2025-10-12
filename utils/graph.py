@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import os 
 
 def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
     """
@@ -19,6 +20,7 @@ def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
         val_acc = logs["val_accuracy"]
         loss = logs["train_loss"]
         val_loss = logs["val_loss"]
+    os.makedirs("results/plots", exist_ok=True)
 
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
@@ -38,4 +40,9 @@ def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
     plt.legend()
 
     plt.tight_layout()
-    plt.show()
+   
+    
+    plt.savefig("results/plots/Base.png")
+    plt.show()  
+    print("Image is saved in graph.py")
+    plt.close()
