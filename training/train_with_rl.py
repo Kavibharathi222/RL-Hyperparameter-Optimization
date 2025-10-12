@@ -25,17 +25,21 @@ print("✅ Tokenizer saved to models/tokenizer.pkl")
 # -----------------------------
 # 2️⃣ Define Action Space (Scaling-based)
 # -----------------------------
-lr_factors = [0.5, 0.8, 1.0, 1.2, 1.5]
-batch_factors = [0.5, 1.0, 1.5, 2.0]
-dropout_factors = [0.8, 1.0, 1.2]
+# -----------------------------
+# 2️⃣ Define Discrete Action Space (Stable Version)
+# -----------------------------
+lr_values = [0.001, 0.0005, 0.0001]
+batch_sizes = [64, 128, 256]
+dropouts = [0.6, 0.5, 0.4]
 
 action_space = [
     {"lr": lr, "batch_size": bs, "dropout": dr}
-    for lr in lr_factors
-    for bs in batch_factors
-    for dr in dropout_factors
+    for lr in lr_values
+    for bs in batch_sizes
+    for dr in dropouts
 ]
 print(f"[INFO] Action space size: {len(action_space)}")
+
 
 
 # -----------------------------
