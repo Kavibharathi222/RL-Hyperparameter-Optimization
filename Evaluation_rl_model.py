@@ -26,7 +26,7 @@ from tensorflow.keras.models import load_model
 #     return model
 
 
-with open("results/tokenizer_basemodel.pkl", "rb") as f:
+with open("SavedModels/tokenizer_basemodel.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 # vocab_size = len(tokenizer.word_index) + 1

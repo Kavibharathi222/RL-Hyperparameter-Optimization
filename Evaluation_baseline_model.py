@@ -14,10 +14,10 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 # -------------------------
 # Load baseline model + tokenizer
 # -------------------------
-baseline_model = tf.keras.models.load_model("models/saved_models/baseline_model.h5")
+baseline_model = tf.keras.models.load_model("SavedModels/baseline_model.h5")
 print("Baseline model input shape:", baseline_model.input_shape)
 
-with open("results/tokenizer_basemodel.pkl", "rb") as f:
+with open("SavedModels/tokenizer_basemodel.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 # -------------------------
