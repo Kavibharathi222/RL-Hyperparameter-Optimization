@@ -19,7 +19,7 @@ def train_baseline():
     print("🔹 Training model...")
     history = model.fit(
         X_train, y_train,
-        epochs=2,
+        epochs=50,
         batch_size=64,
         validation_data=(X_val, y_val),
         verbose=1

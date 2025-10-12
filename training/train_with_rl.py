@@ -44,7 +44,7 @@ print(f"[INFO] Action space size: {len(action_space)}")
 env = SentimentEnv(
     X_train, y_train, X_val, y_val,
     step_epochs=1,
-    max_steps=2,
+    max_steps=10,
     target_accuracy=0.87,
     verbose=True, new_run=True
 )
@@ -69,7 +69,7 @@ agent = DQNAgent(
 # -----------------------------
 # 4️⃣ DQN Training Loop
 # -----------------------------
-episodes = 1
+episodes = 5
 rewards_log = []
 best_val_acc = 0.0
 numofepoch =0
