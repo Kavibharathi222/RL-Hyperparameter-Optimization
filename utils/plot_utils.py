@@ -2,18 +2,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-def plot_training_logs(folder_path="results", save_dir="results/plots"):
+def plot_training_logs(folder_path="results", save_dir="results/plots", prefix="accuracy_logs"):
     """
-    Automatically loads the latest CSV file in the given folder
-    and plots training vs validation loss and accuracy.
+    Loads the latest CSV file in folder_path that starts with the given prefix
+    and plots training vs validation loss and accuracy in a single figure.
     """
-    # Find all CSV files in the folder
+    # Find CSV files that start with the prefix
     csv_files = [os.path.join(folder_path, f)
                  for f in os.listdir(folder_path)
-                 if f.endswith(".csv")]
+                 if f.endswith(".csv") and f.startswith(prefix)]
 
     if not csv_files:
-        print(f"[WARN] No CSV files found in {folder_path}.")
+        print(f"[WARN] No CSV files starting with '{prefix}' found in {folder_path}.")
         return
 
     # Sort by modification time and pick the latest
@@ -38,30 +38,32 @@ def plot_training_logs(folder_path="results", save_dir="results/plots"):
 
     os.makedirs(save_dir, exist_ok=True)
 
+    # Create a single figure with 2 subplots
+    fig, axs = plt.subplots(1, 2, figsize=(16, 5))
+
     # Plot Loss
-    plt.figure(figsize=(8, 5))
-    plt.plot(epochs, train_loss, label="Training Loss", marker="o")
-    plt.plot(epochs, val_loss, label="Validation Loss", marker="s")
-    plt.title("Training vs Validation Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.grid(True)
-    loss_path = os.path.join(save_dir, "loss_plot.png")
-    plt.savefig(loss_path)
-    plt.show()
-    print(f"📊 Loss plot saved to {loss_path}")
+    axs[0].plot(epochs, train_loss, label="Training Loss", marker="o")
+    axs[0].plot(epochs, val_loss, label="Validation Loss", marker="s")
+    axs[0].set_title("Training vs Validation Loss")
+    axs[0].set_xlabel("Epoch")
+    axs[0].set_ylabel("Loss")
+    axs[0].legend()
+    axs[0].grid(True)
 
     # Plot Accuracy
-    plt.figure(figsize=(8, 5))
-    plt.plot(epochs, train_acc, label="Training Accuracy", marker="o")
-    plt.plot(epochs, val_acc, label="Validation Accuracy", marker="s")
-    plt.title("Training vs Validation Accuracy")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.grid(True)
-    acc_path = os.path.join(save_dir, "accuracy_plot.png")
-    plt.savefig(acc_path)
+    axs[1].plot(epochs, train_acc, label="Training Accuracy", marker="o")
+    axs[1].plot(epochs, val_acc, label="Validation Accuracy", marker="s")
+    axs[1].set_title("Training vs Validation Accuracy")
+    axs[1].set_xlabel("Epoch")
+    axs[1].set_ylabel("Accuracy")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Adjust layout
+    plt.tight_layout()
+
+    # Save the combined figure
+    combined_path = os.path.join(save_dir, "loss_accuracy_plot.png")
+    plt.savefig(combined_path)
     plt.show()
-    print(f"📊 Accuracy plot saved to {acc_path}")
+    print(f"📊 Combined Loss & Accuracy plot saved to {combined_path}")

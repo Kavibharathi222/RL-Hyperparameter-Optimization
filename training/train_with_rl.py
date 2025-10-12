@@ -1,13 +1,8 @@
-
-
-
-
-
-
-
 import os
 import pickle
+import csv
 import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
 from environment.sentiment_env import SentimentEnv
 from models.rl_agent import DQNAgent
@@ -28,16 +23,12 @@ with open("models/tokenizer.pkl", "wb") as f:
     pickle.dump(tokenizer, f)
 print("✅ Tokenizer saved to models/tokenizer.pkl")
 
-
 # -----------------------------
-# 2️⃣ Define Action Space (Scaling-based)
-# -----------------------------
-# -----------------------------
-# 2️⃣ Define Discrete Action Space (Stable Version)
+# 2️⃣ Define Action Space
 # -----------------------------
 lr_values = [0.001, 0.0008, 0.0005]
 batch_sizes = [64, 128, 256]
-dropouts = 0.5
+dropouts = [0.5]
 
 action_space = [
     {"lr": lr, "batch_size": bs, "dropout": dr}
@@ -46,8 +37,6 @@ action_space = [
     for dr in dropouts
 ]
 print(f"[INFO] Action space size: {len(action_space)}")
-
-
 
 # -----------------------------
 # 3️⃣ Initialize Environment + Agent
@@ -76,16 +65,21 @@ agent = DQNAgent(
     target_update_freq=5
 )
 
-
 # -----------------------------
-# 4️⃣ DQN Training Loop
+# 4️⃣ DQN Training Loop with Metrics
 # -----------------------------
 episodes = 5
 rewards_log = []
 best_val_acc = 0.0
-numofepoch =0
 best_model_path = "SavedModels/best_model.keras"
 final_model_path = "SavedModels/final_model.keras"
+
+# Prepare CSV for storing metrics
+os.makedirs("results", exist_ok=True)
+metrics_csv = "results/dqn_test_metrics.csv"
+with open(metrics_csv, mode="w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Episode", "Accuracy", "Precision", "Recall", "F1"])
 
 for ep in range(episodes):
     print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
@@ -105,70 +99,38 @@ for ep in range(episodes):
         state = next_state
         total_reward += reward
 
+        # Save best model
         if info["val_accuracy"] > best_val_acc:
             best_val_acc = info["val_accuracy"]
             env.model.save(best_model_path)
             print(f"💾 [SAVE] New best model (val_acc={best_val_acc:.4f})")
 
-        if done:
-            print("🛑 Training stopped (done=True). Saving current model...")
-            env.model.save(final_model_path)
-            break
+    # Evaluate metrics on validation set after each episode
+    y_val_pred_probs = env.model.predict(X_val, verbose=0)
+    y_val_pred = (y_val_pred_probs > 0.5).astype(int)
+
+    acc = accuracy_score(y_val, y_val_pred)
+    prec = precision_score(y_val, y_val_pred)
+    rec = recall_score(y_val, y_val_pred)
+    f1 = f1_score(y_val, y_val_pred)
+
+    # Save metrics to CSV
+    with open(metrics_csv, mode="a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([ep+1, acc, prec, rec, f1])
 
     print(f"[EPISODE {ep + 1}] Total Reward = {total_reward:.2f} | Best Val Acc = {best_val_acc:.4f}")
+    print(f"📊 Validation Metrics — Accuracy: {acc:.4f}, Precision: {prec:.4f}, Recall: {rec:.4f}, F1: {f1:.4f}")
     rewards_log.append(total_reward)
 
-print("\n✅ Training completed successfully!")
+    # Save final model at the end of episode
+    env.model.save(final_model_path)
+
+print("\n✅ DQN Training completed successfully!")
 print(f"🏆 Best validation accuracy: {best_val_acc:.4f}")
-env.model.save(final_model_path)
 print(f"💾 Final model saved to {final_model_path}")
 
+# -----------------------------
+# 5️⃣ Plot rewards and metrics
+# -----------------------------
 plot_training_logs(folder_path="results", save_dir="results/plots")
-# -----------------------------
-# 5️⃣ Plot Rewards per Episode
-# -----------------------------
-# import os
-# import pandas as pd
-# import matplotlib.pyplot as plt
-
-# # Read your log file (CSV or TSV). Adjust delimiter if needed ("," or "\t")
-# log_file = "results/accuracy_logs.csv"   # update with your actual file path
-# df = pd.read_csv(log_file)
-# print(df.columns.tolist())
-# print(df.head())
-
-# # Extract columns
-# epochs = df["epoch"]
-# train_loss = df["train_loss"]
-# val_loss = df["val_loss"]
-# train_acc = df["train_accuracy"]
-# val_acc = df["val_accuracy"]
-
-# # Create folder if not exists
-# os.makedirs("results/plots", exist_ok=True)
-
-# # --- Plot 1: Training vs Validation Loss ---
-# plt.figure(figsize=(8, 5))
-# plt.plot(epochs, train_loss, label="Training Loss", marker="o")
-# plt.plot(epochs, val_loss, label="Validation Loss", marker="s")
-# plt.title("Training vs Validation Loss")
-# plt.xlabel("Epoch")
-# plt.ylabel("Loss")
-# plt.grid(True)
-# plt.legend()
-# plt.savefig("results/plots/loss_plot.png")
-# plt.show()
-
-# # --- Plot 2: Training vs Validation Accuracy ---
-# plt.figure(figsize=(8, 5))
-# plt.plot(epochs, train_acc, label="Training Accuracy", marker="o")
-# plt.plot(epochs, val_acc, label="Validation Accuracy", marker="s")
-# plt.title("Training vs Validation Accuracy")
-# plt.xlabel("Epoch")
-# plt.ylabel("Accuracy")
-# plt.grid(True)
-# plt.legend()
-# plt.savefig("results/plots/accuracy_plot.png")
-# plt.show()
-
-# plt.close()
