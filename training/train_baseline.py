@@ -44,6 +44,7 @@ def train_baseline():
                 history.history["val_loss"][epoch],
                 history.history["val_accuracy"][epoch]
             ])
+     # print("Accuracy :"  {history.history["val_accuracy"]})
     print(f"📊 Training metrics saved to {log_file}")
 
     # 🔸 Save model in pickle format

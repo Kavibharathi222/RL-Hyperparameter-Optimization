@@ -2,6 +2,8 @@ import copy
 import csv
 import os
 import time
+import datetime
+import shutil
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
@@ -26,6 +28,8 @@ def safe_append_csv(log_file, row):
 
 # ---------- RL Environment ----------
 class SentimentEnv:
+    epoch_count = 0
+    prev_epoch =0
     def __init__(
         self,
         X_train, y_train,
@@ -42,6 +46,7 @@ class SentimentEnv:
         target_accuracy=None,
         verbose=True,
         random_seed=None,
+        new_run=True,  # <-- new flag to control fresh file creation
     ):
         if random_seed is not None:
             np.random.seed(random_seed)
@@ -75,8 +80,27 @@ class SentimentEnv:
         self.prev_val_loss = 1.0
         self.best_val_acc = 0.0
 
+        # ---------- Logging setup ----------
         os.makedirs("results", exist_ok=True)
-        self.LOG_FILE = "results/accuracy_logs.csv"
+
+        if new_run:
+            # Create a new log file for each run with timestamp
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.LOG_FILE = f"results/accuracy_logs_{timestamp}.csv"
+            print(f"[INFO] New training session started. Log file: {self.LOG_FILE}")
+        else:
+            # Continue appending to latest file
+            self.LOG_FILE = "results/accuracy_logs_latest.csv"
+            print(f"[INFO] Continuing training. Appending to: {self.LOG_FILE}")
+
+        # Write header for new run
+        with open(self.LOG_FILE, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                "step", "epoch", "train_loss", "train_accuracy",
+                "val_loss", "val_accuracy", "reward", "best_val_accuracy",
+                "learning_rate", "batch_size", "dropout"
+            ])
 
         # Build initial model
         self.model = self._build_model(self.current_hyperparams)
@@ -114,7 +138,7 @@ class SentimentEnv:
         if action is None:
             action = {}
 
-        # Scale current hyperparameters dynamically
+        # Dynamic hyperparameter updates
         if "lr" in action:
             old_lr = self.current_hyperparams["lr"]
             new_lr = max(old_lr * float(action["lr"]), 1e-6)
@@ -175,26 +199,28 @@ class SentimentEnv:
             reward += 5.0
             done = True
 
-        # Logging
-        if not os.path.exists(self.LOG_FILE):
-            with open(self.LOG_FILE, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow([
-                    "step", "epoch", "train_loss", "train_accuracy",
-                    "val_loss", "val_accuracy", "reward", "best_val_accuracy",
-                    "learning_rate", "batch_size", "dropout"
-                ])
-
+        # Save logs
         train_loss = history.history["loss"][-1]
         train_acc = history.history["accuracy"][-1]
+        if SentimentEnv.prev_epoch==0:
+            SentimentEnv.prev_epoch = self.epoch 
+        else :
+            SentimentEnv.prev_epoch +=1
+        # SentimentEnv.epoch_count = self.step_count * 10 + self.epoch
 
         safe_append_csv(self.LOG_FILE, [
-            self.step_count, self.epoch, train_loss, train_acc,
+            self.step_count, SentimentEnv.prev_epoch, train_loss, train_acc,
             val_loss, val_acc, reward, self.best_val_acc,
             self.current_hyperparams["lr"],
             self.current_hyperparams["batch_size"],
             self.current_hyperparams["dropout"]
         ])
+
+        # Copy this file as "latest" for easy access
+        try:
+            shutil.copy(self.LOG_FILE, "results/accuracy_logs_latest.csv")
+        except Exception:
+            pass
 
         if self.verbose:
             print(f"[ENV] Step {self.step_count} | Epoch={self.epoch} | "

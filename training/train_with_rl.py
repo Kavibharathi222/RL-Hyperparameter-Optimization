@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
 from environment.sentiment_env import SentimentEnv
 from models.rl_agent import DQNAgent
-
+from utils.plot_utils import plot_training_logs
 
 # -----------------------------
 # 1️⃣ Load & Preprocess Dataset
@@ -46,7 +46,7 @@ env = SentimentEnv(
     step_epochs=1,
     max_steps=2,
     target_accuracy=0.87,
-    verbose=True
+    verbose=True, new_run=True
 )
 
 state_size = 3
@@ -72,12 +72,13 @@ agent = DQNAgent(
 episodes = 1
 rewards_log = []
 best_val_acc = 0.0
-
+numofepoch =0
 best_model_path = "SavedModels/best_model.keras"
 final_model_path = "SavedModels/final_model.keras"
 
 for ep in range(episodes):
     print(f"\n🚀 [EPISODE {ep + 1}/{episodes}] ----------------------------")
+    
     state = env.reset()
     done = False
     total_reward = 0
@@ -111,19 +112,52 @@ print(f"🏆 Best validation accuracy: {best_val_acc:.4f}")
 env.model.save(final_model_path)
 print(f"💾 Final model saved to {final_model_path}")
 
-
+plot_training_logs(folder_path="results", save_dir="results/plots")
 # -----------------------------
 # 5️⃣ Plot Rewards per Episode
 # -----------------------------
-os.makedirs("results/plots", exist_ok=True)
-plt.figure(figsize=(8, 5))
-plt.plot(range(1, len(rewards_log) + 1), rewards_log, marker="o", color="blue")
-plt.title("DQN Training Rewards per Episode")
-plt.xlabel("Episode")
-plt.ylabel("Total Reward")
-plt.grid(True)
-plt.savefig("results/plots/RL.png")  
-plt.show()
+# import os
+# import pandas as pd
+# import matplotlib.pyplot as plt
 
+# # Read your log file (CSV or TSV). Adjust delimiter if needed ("," or "\t")
+# log_file = "results/accuracy_logs.csv"   # update with your actual file path
+# df = pd.read_csv(log_file)
+# print(df.columns.tolist())
+# print(df.head())
 
-plt.close()
+# # Extract columns
+# epochs = df["epoch"]
+# train_loss = df["train_loss"]
+# val_loss = df["val_loss"]
+# train_acc = df["train_accuracy"]
+# val_acc = df["val_accuracy"]
+
+# # Create folder if not exists
+# os.makedirs("results/plots", exist_ok=True)
+
+# # --- Plot 1: Training vs Validation Loss ---
+# plt.figure(figsize=(8, 5))
+# plt.plot(epochs, train_loss, label="Training Loss", marker="o")
+# plt.plot(epochs, val_loss, label="Validation Loss", marker="s")
+# plt.title("Training vs Validation Loss")
+# plt.xlabel("Epoch")
+# plt.ylabel("Loss")
+# plt.grid(True)
+# plt.legend()
+# plt.savefig("results/plots/loss_plot.png")
+# plt.show()
+
+# # --- Plot 2: Training vs Validation Accuracy ---
+# plt.figure(figsize=(8, 5))
+# plt.plot(epochs, train_acc, label="Training Accuracy", marker="o")
+# plt.plot(epochs, val_acc, label="Validation Accuracy", marker="s")
+# plt.title("Training vs Validation Accuracy")
+# plt.xlabel("Epoch")
+# plt.ylabel("Accuracy")
+# plt.grid(True)
+# plt.legend()
+# plt.savefig("results/plots/accuracy_plot.png")
+# plt.show()
+
+# plt.close()
