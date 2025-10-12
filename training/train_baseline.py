@@ -44,18 +44,12 @@ def train_baseline():
                 history.history["val_loss"][epoch],
                 history.history["val_accuracy"][epoch]
             ])
-     # print("Accuracy :"  {history.history["val_accuracy"]})
     print(f"📊 Training metrics saved to {log_file}")
 
-    # 🔸 Save model in pickle format
-    # os.makedirs("models/saved_models", exist_ok=True)
-    # model_path = "results/baseline_model.h5"
-    # with open(model_path, "wb") as f:
-    #     pickle.dump(model, f)
-    # print(f"✅ Model saved successfully at: {model_path}")
+    # 🔸 Save model in `.keras` format
     os.makedirs("SavedModels", exist_ok=True)
-    model_path = "SavedModels/baseline_model.h5"
-    model.save(model_path)  
+    model_path = "SavedModels/baseline_model.keras"
+    model.save(model_path)
     print(f"✅ Model saved successfully at: {model_path}")
 
     # Also save tokenizer (important for manual testing)

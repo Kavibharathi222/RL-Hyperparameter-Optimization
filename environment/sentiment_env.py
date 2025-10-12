@@ -198,8 +198,8 @@ class SentimentEnv:
 
         # Validation evaluation
         val_loss, val_acc = self.model.evaluate(self.X_val, self.y_val, verbose=0)
-        delta_acc = val_acc - self.prev_val_acc
-        reward = delta_acc * self.reward_scaling
+        # delta_acc = val_acc - self.prev_val_acc
+        reward = (val_acc - self.prev_val_acc) * 50 + 0.1 * val_acc
 
         self.prev_val_acc = val_acc
         self.prev_val_loss = val_loss
