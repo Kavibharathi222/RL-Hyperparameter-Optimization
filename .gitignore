@@ -26,3 +26,7 @@ venv/
 # Model Files 
 # Ignore model files    
 *.pkl
+*.keras
+*.h5
+results/plots/
+results/*.csv
