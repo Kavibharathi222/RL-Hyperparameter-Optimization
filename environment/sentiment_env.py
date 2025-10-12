@@ -28,8 +28,9 @@ def safe_append_csv(log_file, row):
 
 # ---------- RL Environment ----------
 class SentimentEnv:
+    prev_count =0
     epoch_count = 0
-    prev_epoch =0
+
     def __init__(
         self,
         X_train, y_train,
@@ -202,14 +203,14 @@ class SentimentEnv:
         # Save logs
         train_loss = history.history["loss"][-1]
         train_acc = history.history["accuracy"][-1]
-        if SentimentEnv.prev_epoch==0:
-            SentimentEnv.prev_epoch = self.epoch 
-        else :
-            SentimentEnv.prev_epoch +=1
         # SentimentEnv.epoch_count = self.step_count * 10 + self.epoch
+        if SentimentEnv.prev_count == 0:
+            SentimentEnv.prev_count=self.epoch
+        else:
+            SentimentEnv.prev_count+=1
 
         safe_append_csv(self.LOG_FILE, [
-            self.step_count, SentimentEnv.prev_epoch, train_loss, train_acc,
+            self.step_count, SentimentEnv.prev_count, train_loss, train_acc,
             val_loss, val_acc, reward, self.best_val_acc,
             self.current_hyperparams["lr"],
             self.current_hyperparams["batch_size"],
