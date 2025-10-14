@@ -136,54 +136,10 @@ class SentimentEnv:
 
     # ---------- Step ----------
     def step(self, action=None):
-    
-
         if action is None:
             action = {}
 
-        # --- Update hyperparameters directly (no scaling) ---
-        updated = False
-
-        # Learning rate
-        if "lr" in action:
-            new_lr = float(action["lr"])
-            old_lr = self.current_hyperparams["lr"]
-            if abs(new_lr - old_lr) > 1e-8:
-                self.current_hyperparams["lr"] = new_lr
-                if hasattr(self.model.optimizer.learning_rate, "assign"):
-                    self.model.optimizer.learning_rate.assign(new_lr)
-                else:
-                    self.model.optimizer.learning_rate = new_lr
-                if self.verbose:
-                    print(f"[ENV] Learning rate set to {new_lr:.6f}")
-                updated = True
-
-        # Batch size
-        if "batch_size" in action:
-            new_bs = int(action["batch_size"])
-            if new_bs != self.current_hyperparams["batch_size"]:
-                self.current_hyperparams["batch_size"] = new_bs
-                if self.verbose:
-                    print(f"[ENV] Batch size set to {new_bs}")
-                updated = True
-
-        # Dropout
-        if "dropout" in action:
-            new_dp = float(action["dropout"])
-            old_dp = self.current_hyperparams["dropout"]
-            if abs(new_dp - old_dp) > 1e-6:
-                old_weights = self.model.get_weights()
-                self.current_hyperparams["dropout"] = new_dp
-                self.model = self._build_model(self.current_hyperparams)
-                try:
-                    self.model.set_weights(old_weights)
-                except Exception:
-                    pass
-                if self.verbose:
-                    print(f"[ENV] Dropout set to {new_dp:.2f}")
-                updated = True
-
-        # Training
+        # Training first to compute reward
         bs = self.current_hyperparams["batch_size"]
         history = self.model.fit(
             self.X_train, self.y_train,
@@ -198,9 +154,31 @@ class SentimentEnv:
 
         # Validation evaluation
         val_loss, val_acc = self.model.evaluate(self.X_val, self.y_val, verbose=0)
-        # delta_acc = val_acc - self.prev_val_acc
         reward = (val_acc - self.prev_val_acc) * 50 + 0.1 * val_acc
 
+        # ---------- Only update hyperparameters if reward is negative ----------
+        if reward < 0:
+            if "lr" in action:
+                new_lr = float(action["lr"])
+                self.current_hyperparams["lr"] = new_lr
+                if hasattr(self.model.optimizer.learning_rate, "assign"):
+                    self.model.optimizer.learning_rate.assign(new_lr)
+                else:
+                    self.model.optimizer.learning_rate = new_lr
+
+            if "batch_size" in action:
+                self.current_hyperparams["batch_size"] = int(action["batch_size"])
+
+            if "dropout" in action:
+                old_weights = self.model.get_weights()
+                self.current_hyperparams["dropout"] = float(action["dropout"])
+                self.model = self._build_model(self.current_hyperparams)
+                try:
+                    self.model.set_weights(old_weights)
+                except Exception:
+                    pass
+
+        # Update prev_val_acc and prev_val_loss after step
         self.prev_val_acc = val_acc
         self.prev_val_loss = val_loss
         self.best_val_acc = max(self.best_val_acc, val_acc)
@@ -210,14 +188,14 @@ class SentimentEnv:
             reward += 5.0
             done = True
 
-        # Logging
+        # Logging (same as before)
         train_loss = history.history["loss"][-1]
         train_acc = history.history["accuracy"][-1]
-        if SentimentEnv.prev_count == 0:
-            SentimentEnv.prev_count = self.epoch
+        if SentimentEnv.prev_count ==0:
+            SentimentEnv.prev_count=self.epoch
         else:
-            SentimentEnv.prev_count += 1
-
+            SentimentEnv.prev_count+=1
+        
         safe_append_csv(self.LOG_FILE, [
             self.step_count, SentimentEnv.prev_count, train_loss, train_acc,
             val_loss, val_acc, reward, self.best_val_acc,
@@ -225,16 +203,10 @@ class SentimentEnv:
             self.current_hyperparams["batch_size"],
             self.current_hyperparams["dropout"]
         ])
-
-        # Copy to latest file
         try:
             shutil.copy(self.LOG_FILE, "results/accuracy_logs_latest.csv")
         except Exception:
             pass
-
-        if self.verbose:
-            print(f"[ENV] Step {self.step_count} | Epoch={self.epoch} | "
-                f"ValAcc={val_acc:.4f} | Reward={reward:.4f} | Params={self.current_hyperparams}")
 
         info = {
             "val_accuracy": val_acc,
@@ -245,7 +217,12 @@ class SentimentEnv:
             "best_val_accuracy": self.best_val_acc,
         }
 
+        if self.verbose:
+            print(f"[ENV] Step {self.step_count} | Epoch={self.epoch} | "
+                f"ValAcc={val_acc:.4f} | Reward={reward:.4f} | Params={self.current_hyperparams}")
+
         return self._get_state(), reward, done, info
+
 
 
     def render(self):
