@@ -47,7 +47,7 @@ print("[INFO] Starting fine-tuning with fixed hyperparameters...")
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    epochs=10,
+    epochs=50,
     batch_size=best_hparams["batch_size"],
     verbose=1
 )
