@@ -150,12 +150,37 @@ def predict_sentiment(model, tokenizer, text, maxlen=200, threshold=0.3):
 # -------------------------
 # Evaluate sample reviews
 # -------------------------
+print("First 3 Positive Reviews")
+print("Last 3 Negative")
+# -------------------------
+# Sample reviews
+# -------------------------
 sample_texts = [
-    "One of the other reviewers has mentioned that after watching just 1 Oz episode you'll be hooked. They are right, as this is exactly what happened with me.<br /><br />The first thing that struck me about Oz was its brutality and unflinching scenes of violence, which set in right from the word GO. Trust me, this is not a show for the faint hearted or timid. This show pulls no punches with regards to drugs, sex or violence. Its is hardcore, in the classic use of the word.<br /><br />It is called OZ as that is the nickname given to the Oswald Maximum Security State Penitentary. It focuses mainly on Emerald City, an experimental section of the prison where all the cells have glass fronts and face inwards, so privacy is not high on the agenda. Em City is home to many..Aryans, Muslims, gangstas, Latinos, Christians, Italians, Irish and more....so scuffles, death stares, dodgy dealings and shady agreements are never far away.<br /><br />I would say the main appeal of the show is due to the fact that it goes where other shows wouldn't dare. Forget pretty pictures painted for mainstream audiences, forget charm, forget romance...OZ doesn't mess around. The first episode I ever saw struck me as so nasty it was surreal, I couldn't say I was ready for it, but as I watched more, I developed a taste for Oz, and got accustomed to the high levels of graphic violence. Not just violence, but injustice (crooked guards who'll be sold out for a nickel, inmates who'll kill on order and get away with it, well mannered, middle class inmates being turned into prison bitches due to their lack of street skills or prison experience) Watching Oz, you may become comfortable with what is uncomfortable viewing....thats if you can get in touch with your darker side.",
-    """I can see what they were trying to pull off here, and they almost did it. Emma Paunil , and Brianna Roy don't have a lot of experience between them, but there is potential for both of their careers. This venture however fell just a little short of being a complete effort though. Mostly it was the sound that had me cringing. Up until the party scene, it was horrible. There was an tinny sound happening throughout until then. I don't know why the sound engineers didn't clue into it until that party scene.The zany, offbeat dialogue, and story line kept me entertained enough to get through the sound issues. It fell off the rails a bit during the party scene. Was it too much to ask for the solo cups to at least appear filled with any sort of beverage? Aside from establishing an alibi, the whole scene felt disjointed.
+    """I haven't watched many Tamil movies, but I found that Chandramukhi was one of the best yet I watched. It has got everything you can have in a movie: humor, horror, thrill,romance, action, music, etc. The songs are REALLY good in this movie. I would definitely recommend buying the soundtrack of Chandramukhi. There's even one song in Telugu. Overall, I liked this movie a lot. Of course it had Rajnikanth in it, which brought quite a lot more appeal to it. There are good fight scenes with attempts of the "Matrix" effect, which is pretty cool. In the Telugu dub of this movie, one of the songs is sung by Carnatic Diva, Nityasree Mahadevan. What more could one ask for? It is a great movie, and I think everyone should see it. It might be a bit scary for young children, but it should be suitable for older ones. Conclusively, Chandramukhi is a great watch, and with stars like R
+    ajnikanth and Jyothika, it is a big success!!""",
+    """Movie starts with typical superstar action sequences and flows through interestingly till the end. For audience not aware of movies original version in Malayalam it will be a nice thriller, very unnatural for a Rajini movie.
 
-Overall it was a good venture for a crew with limited experienc"""
+Rajini has done a great job in mixing all elements. Vadivelu role is commendable. Even though Jyotika has done a reasonable job, her overacting was evident in some scenes. P.Vasu did okay by not screwing up Fazil's work in "Manichitrathalu".
+
+In summary hardcore fans might be disappointed by not hearing any punch lines but nice pace keeps the movie rolling. It's sure to get a lot of appreciation from varied group of audience.""",
+    """The storyline is different. No usual generation after generation story. Its a ghost story. Its unlike most of the formula movies that Rajini has made in the recent past. It has his usual mannerisms but lacks punch lines or political dialogs(a welcome change).
+
+It is a ghost movie about an ancestral castle which has the ghost of a dancer who was sodomized and killed by the king who lived there. Vadivelu's comedy plays an integral part in making the movie good.
+
+For a change Rajini does not dominate the screen. In fact its jyotika who dominates the second half of the movie and takes the movie forward. Good fun to watch with a huge gang of friends""",
+    """Worst Remake of Malayalam movie Manichitrathazhu. Not only Manichitrathazhu has won two National Film Awards; Best Popular Film Providing Wholesome Entertainment for Fazil and Best Actress for Shobana.""",
+    """I happened to see this movie. This movie is as bad as baba. I still don't know why rajni has accepted this movie. It doesn't have any flavor of rajni. 2-fight sequence has been unnecessarily included just to satisfy rajni fans and that's it. Jothika was okay and I couldn't watch Prabhu at all. I have seen the original Manichithrathazhu and nobody in this movie have ever come near to any cast in Malayalam. Certain scenes (especially the end when rajni comes with dog and acts as the vettayapura raja) were height of stupidity. In Malayalam entire movie was great and only this P.Vasu can give such an idiotic version of a beautiful movie. I would advice not to watch this movie. Anyway rajni fans will definitely watch to see what is there. So no point in advising.
+
+I hate this P.Vasu for giving such a stupid movie with our super star.""",
+    """I seriously think Rajini should stop acting as the "Super hero" and try to take up some decent roles like father or grandfather....his make-up looks horrible and all the perverted jokes suck. Come on ! u cant even imagine him romancing nayantara ! she is 1/4 of his age.. only solace was good acting by Jo and Prabhu ! Prabhu looks much better in this movie..Jo have over-acted as usual but it didn't look odd as her role demands that.
+
+Last but not the least, all the double meaning dialogues were so bad it no more gives the image that rajini movies are family entertainers...
+
+It looks shameful to appreciate such movies...its nowhere near the original mallu version...
+
+And he shd stop trying to be "keanu reeves" of matrix :-)"""
 ]
+
 
 threshold = 0.3
 results_file = "results/rl_review_predictions.csv"
