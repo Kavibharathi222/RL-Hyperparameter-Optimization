@@ -191,7 +191,7 @@ print(f"[INFO] Action space size: {len(action_space)}")
 # -----------------------------
 env = SentimentEnv(
     X_train, y_train, X_val, y_val,
-    step_epochs=3,
+    step_epochs=1,
     max_steps=10,
     target_accuracy=0.99,
     verbose=True, new_run=True
@@ -216,7 +216,7 @@ agent = DQNAgent(
 # -----------------------------
 # 4️⃣ DQN Training Loop with Metrics
 # -----------------------------
-episodes = 5
+episodes = 3
 rewards_log = []
 best_val_acc = 0.0
 best_model_path = "SavedModels/best_model.keras"
