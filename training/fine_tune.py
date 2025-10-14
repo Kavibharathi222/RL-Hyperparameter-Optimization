@@ -72,6 +72,8 @@ plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.legend()
 plt.grid(True)
+plt.ylim(0.1, 0.99)
+plt.yticks([i/10 for i in range(1, 11)])  # 0.1 to 1.0
 
 # --- Loss subplot ---
 plt.subplot(1, 2, 2)
@@ -82,10 +84,11 @@ plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
 plt.grid(True)
+plt.ylim(0, 3)
 
-# Adjust layout and save
 plt.tight_layout()
-plt.savefig("results/fine_tune_performance.png", dpi=300)
+plt.savefig("results/plots/fine_tune_performance.png", dpi=300)
 plt.show()
+
 
 print("📊 Plot saved to results/fine_tune_performance.png")

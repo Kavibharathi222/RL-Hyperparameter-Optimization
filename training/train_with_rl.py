@@ -166,10 +166,10 @@ X_train, y_train, X_test, y_test, tokenizer = load_and_preprocess_imdb(num_words
 X_val, y_val = X_train[:5000], y_train[:5000]
 X_train, y_train = X_train[5000:], y_train[5000:]
 
-os.makedirs("models", exist_ok=True)
-with open("models/tokenizer.pkl", "wb") as f:
-    pickle.dump(tokenizer, f)
-print("✅ Tokenizer saved to models/tokenizer.pkl")
+# os.makedirs("models", exist_ok=True)
+# with open("SavedModels/tokenizer.pkl", "wb") as f:
+#     pickle.dump(tokenizer, f)
+# print("✅ Tokenizer saved to models/tokenizer.pkl")
 
 # -----------------------------
 # 2️⃣ Define Action Space
@@ -193,7 +193,7 @@ env = SentimentEnv(
     X_train, y_train, X_val, y_val,
     step_epochs=3,
     max_steps=10,
-    target_accuracy=0.87,
+    target_accuracy=0.99,
     verbose=True, new_run=True
 )
 

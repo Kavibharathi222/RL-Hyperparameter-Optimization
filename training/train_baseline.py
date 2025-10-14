@@ -91,7 +91,7 @@ def train_baseline():
     model.save(model_path)
     print(f"✅ Model saved successfully at: {model_path}")
 
-    tokenizer_path = "SavedModels/tokenizer_basemodel.pkl"
+    tokenizer_path = "SavedModels/tokenizer.pkl"
     with open(tokenizer_path, "wb") as f:
         pickle.dump(tokenizer, f)
     print(f"✅ Tokenizer saved successfully at: {tokenizer_path}")

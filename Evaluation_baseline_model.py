@@ -18,7 +18,7 @@ import csv
 baseline_model = tf.keras.models.load_model("SavedModels/baseline_model.keras")
 print("Baseline model input shape:", baseline_model.input_shape)
 
-with open("SavedModels/tokenizer_basemodel.pkl", "rb") as f:
+with open("SavedModels/tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 # -------------------------

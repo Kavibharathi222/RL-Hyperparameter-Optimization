@@ -129,7 +129,7 @@ logging.getLogger("tensorflow").setLevel(logging.ERROR)
 # Load RL model and tokenizer
 # -------------------------
 rl_model = load_model("SavedModels/final_model.keras")
-with open("SavedModels/tokenizer_basemodel.pkl", "rb") as f:
+with open("SavedModels/tokenizer.pkl", "rb") as f:
     tokenizer = pickle.load(f)
 
 print("✅ RL model and tokenizer loaded successfully.")

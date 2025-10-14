@@ -29,7 +29,10 @@ def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
     plt.title("Training vs Validation Accuracy")
+   
     plt.legend()
+    plt.ylim(0.1, 0.99)
+    plt.yticks([i/10 for i in range(1, 11)])
 
     plt.subplot(1, 2, 2)
     plt.plot(epochs, loss, label="Train Loss")
@@ -38,7 +41,7 @@ def plot_training_history(history=None, log_file="results/baseline_logs.csv"):
     plt.ylabel("Loss")
     plt.title("Training vs Validation Loss")
     plt.legend()
-
+    plt.ylim(0, 3)
     plt.tight_layout()
    
     
