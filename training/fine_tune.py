@@ -91,4 +91,4 @@ plt.savefig("results/plots/fine_tune_performance.png", dpi=300)
 plt.show()
 
 
-print("📊 Plot saved to results/fine_tune_performance.png")
+print("📊 Plot saved to results/plots/fine_tune_performance.png")
