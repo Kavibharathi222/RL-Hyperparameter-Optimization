@@ -65,8 +65,8 @@ plt.figure(figsize=(10, 5))
 
 # --- Accuracy subplot ---
 plt.subplot(1, 2, 1)
-plt.plot(history.history['accuracy'], label='Train Accuracy', marker='o')
-plt.plot(history.history['val_accuracy'], label='Val Accuracy', marker='o')
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Val Accuracy')
 plt.title('Training vs Validation Accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
@@ -77,8 +77,8 @@ plt.yticks([i/10 for i in range(1, 11)])  # 0.1 to 1.0
 
 # --- Loss subplot ---
 plt.subplot(1, 2, 2)
-plt.plot(history.history['loss'], label='Train Loss', marker='o')
-plt.plot(history.history['val_loss'], label='Val Loss', marker='o')
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Val Loss')
 plt.title('Training vs Validation Loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
@@ -90,5 +90,20 @@ plt.tight_layout()
 plt.savefig("results/plots/fine_tune_performance.png", dpi=300)
 plt.show()
 
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+print("[INFO] Generating confusion matrix...")
+
+y_pred = model.predict(X_test)
+y_pred_classes = (y_pred > 0.5).astype("int32")
+
+cm = confusion_matrix(y_test, y_pred_classes)
+
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Negative", "Positive"])
+disp.plot(cmap="Blues", values_format="d")
+plt.title("Confusion Matrix - FineTune")
+plt.savefig("results/plots/confusion_finetune.png", dpi=300)
+plt.show()
+
+print("✅ Confusion matrix saved to results/plots/confusion_finetune.png")
 print("📊 Plot saved to results/plots/fine_tune_performance.png")

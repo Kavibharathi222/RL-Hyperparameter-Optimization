@@ -1,11 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-def plot_training_logs(folder_path="results", save_dir="results/plots", prefix="accuracy_logs"):
+def plot_training_logs(folder_path="results",
+                       save_dir="results/plots",
+                       prefix="accuracy_logs",
+                       model=None,
+                       X_test=None,
+                       y_test=None):
     """
     Loads the latest CSV file in folder_path that starts with the given prefix
     and plots training vs validation loss and accuracy in a single figure.
+    If model and test data are provided, also plots the confusion matrix.
     """
     # Find CSV files that start with the prefix
     csv_files = [os.path.join(folder_path, f)
@@ -59,11 +66,32 @@ def plot_training_logs(folder_path="results", save_dir="results/plots", prefix="
     axs[1].legend()
     axs[1].grid(True)
 
-    # Adjust layout
+    # Adjust layout and save plot
     plt.tight_layout()
-
-    # Save the combined figure
     combined_path = os.path.join(save_dir, "loss_accuracy_plot.png")
-    plt.savefig(combined_path)
+    plt.savefig(combined_path, dpi=300)
     plt.show()
     print(f"📊 Combined Loss & Accuracy plot saved to {combined_path}")
+
+    # -----------------------------
+    # ✅ Confusion Matrix Section
+    # -----------------------------
+    if model is not None and X_test is not None and y_test is not None:
+        print("[INFO] Generating confusion matrix...")
+
+        y_pred = model.predict(X_test)
+        y_pred_classes = (y_pred > 0.5).astype("int32")
+
+        cm = confusion_matrix(y_test, y_pred_classes)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm,
+                                      display_labels=["Negative", "Positive"])
+        disp.plot(cmap="Blues", values_format="d")
+        plt.title("Confusion Matrix - FineTune")
+
+        cm_path = os.path.join(save_dir, "confusion_finetune.png")
+        plt.savefig(cm_path, dpi=300)
+        plt.show()
+
+        print(f"✅ Confusion matrix saved to {cm_path}")
+    else:
+        print("[WARN] Confusion matrix not plotted (model or test data missing).")
