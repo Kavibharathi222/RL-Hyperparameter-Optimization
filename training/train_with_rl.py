@@ -168,6 +168,7 @@ from models.rl_agent import DQNAgent
 from utils.plot_utils import plot_training_logs
 import pickle
 import os
+from training.fine_tune import training
 
 # Paths to save best results from Phase 1
 best_params_path = "SavedModels/best_hparams.pkl"
@@ -305,6 +306,7 @@ for ep in range(episodes):
 print("\n✅ DQN Training completed successfully!")
 print(f"🏆 Best validation accuracy: {best_val_acc:.4f}")
 print(f"💾 Final model saved to {final_model_path}")
+training()
 
 # -----------------------------
 # 5️⃣ Plot rewards and metrics
