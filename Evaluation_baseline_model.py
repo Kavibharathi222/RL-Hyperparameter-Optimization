@@ -70,7 +70,7 @@ def predict_sentiment_hybrid(model, text, tokenizer, maxlen=200, threshold=base_
         seq = tokenizer.texts_to_sequences([text])
         padded = pad_sequences(seq, maxlen=maxlen, padding="post", truncating="post")
         pred_prob = model.predict(padded, verbose=0)[0][0]
-        label = "Positive 😀" if pred_prob < threshold else "Negative 😞"
+        label = "Positive 😀" if pred_prob >= threshold else "Negative 😞"
         return label, float(pred_prob), threshold
 print("First 3 Positive Reviews")
 print("Last 3 Negative")
