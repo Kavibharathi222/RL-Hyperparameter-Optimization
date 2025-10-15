@@ -3,5 +3,12 @@ from training.train_baseline import train_baseline
 from utils.graph import plot_training_history
 
 if __name__ == "__main__":
-    history, model ,X_test, y_test= train_baseline()
-    plot_training_history(history,model,X_test, y_test)
+    history, model, X_test, y_test = train_baseline()
+
+    plot_training_history(
+    history=history,
+    model=model,
+    X_test=X_test,
+    y_test=y_test
+)
+
