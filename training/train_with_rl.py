@@ -1,6 +1,7 @@
 import os
 import pickle
 import csv
+import pickle
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
@@ -104,6 +105,15 @@ for ep in range(episodes):
             best_val_acc = info["val_accuracy"]
             env.model.save(best_model_path)
             print(f"💾 [SAVE] New best model (val_acc={best_val_acc:.4f})")
+            os.makedirs("SavedModels", exist_ok=True)
+            with open("SavedModels/best_hparams.pkl", "wb") as f:
+                pickle.dump(info["hyperparams"], f)
+                
+    # print(f"✅ Saved best hyperparameters: {info['hyperparams']}")
+
+
+    print(f"✅ Saved best hyperparameters: {info['hyperparams']}")
+
 
     # Evaluate metrics on validation set after each episode
     y_val_pred_probs = env.model.predict(X_val, verbose=0)
