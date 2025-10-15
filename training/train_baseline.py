@@ -106,7 +106,7 @@ def train_baseline():
         writer.writerow([test_accuracy, test_precision, test_recall, test_f1, best_t])
     print(f"📁 Test metrics (with threshold) saved to {metrics_path}")
 
-    return history, model
+    return history, model, X_test, y_test
 
 if __name__ == "__main__":
     train_baseline()
