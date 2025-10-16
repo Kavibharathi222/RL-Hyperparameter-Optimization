@@ -5,7 +5,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
-
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 # -----------------------------
 # 1️⃣ Load data
 # -----------------------------
@@ -46,12 +47,23 @@ def training():
     # 3️⃣ Fine-tune (stable training)
     # -----------------------------
     print("[INFO] Starting fine-tuning with fixed hyperparameters...")
+    early_stop = EarlyStopping(
+        monitor='val_loss',       # Track validation loss
+        patience=8,               # Stop after 5 epochs without improvement
+        restore_best_weights=True # Roll back to best weights
+    )
+
+    # -----------------------------
+    # 3️⃣ Fine-tune (stable training with early stopping)
+    # -----------------------------
+    print("[INFO] Starting fine-tuning with Early Stopping...")
     history = model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
         epochs=50,
         batch_size=best_hparams["batch_size"],
-        verbose=1
+        verbose=1,
+        callbacks=[early_stop]
     )
 
     # -----------------------------
@@ -109,3 +121,13 @@ def training():
 
     print("✅ Confusion matrix saved to results/plots/confusion_finetune.png")
     print("📊 Plot saved to results/plots/fine_tune_performance.png")
+    precision = precision_score(y_test, y_pred_classes)
+    recall = recall_score(y_test, y_pred_classes)
+    f1 = f1_score(y_test, y_pred_classes)
+    accuracy = accuracy_score(y_test, y_pred_classes)
+
+    print("\n📈 Model Performance on Test Data:")
+    print(f"Precision : {precision:.4f}")
+    print(f"Recall    : {recall:.4f}")
+    print(f"F1 Score  : {f1:.4f}")
+    print(f"Accuracy  : {accuracy:.4f}")
