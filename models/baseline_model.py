@@ -32,7 +32,7 @@ def build_baseline_model(vocab_size=10000, embedding_dim=200, maxlen=200, traina
         Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=maxlen, trainable=trainable),
         
         # BiLSTM layer with 200 units
-        Bidirectional(LSTM(200, dropout=0.4, recurrent_dropout=0.4)),
+        Bidirectional(LSTM(200, dropout=0.1, recurrent_dropout=0)),
         
         # Output layer
         Dense(1, activation='sigmoid')

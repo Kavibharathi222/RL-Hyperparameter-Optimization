@@ -108,14 +108,24 @@ class SentimentEnv:
 
     # ---------- Model Builder ----------
     def _build_model(self, hyperparams):
+        # model = Sequential([
+        #     Embedding(input_dim=self.input_dim, output_dim=self.embedding_dim),
+        #     Bidirectional(LSTM(self.lstm_units, return_sequences=False)),
+        #     Dropout(float(hyperparams.get("dropout", 0.5))),
+        #     Dense(self.dense_units, activation="relu"),
+        #     Dropout(float(hyperparams.get("dropout", 0.5))),
+        #     Dense(1, activation="sigmoid"),
+        # ])
         model = Sequential([
-            Embedding(input_dim=self.input_dim, output_dim=self.embedding_dim),
-            Bidirectional(LSTM(self.lstm_units, return_sequences=False)),
-            Dropout(float(hyperparams.get("dropout", 0.5))),
-            Dense(self.dense_units, activation="relu"),
-            Dropout(float(hyperparams.get("dropout", 0.5))),
-            Dense(1, activation="sigmoid"),
-        ])
+        # Embedding layer (can use pre-trained embeddings)
+        Embedding(input_dim=10000, output_dim=128, input_length=200, trainable=False),
+        
+        # BiLSTM layer with 200 units
+        Bidirectional(LSTM(200, dropout=float(hyperparams.get("dropout", 0.5)), recurrent_dropout=0)),
+        
+        # Output layer
+        Dense(1, activation='sigmoid')
+    ])
         opt = Adam(learning_rate=float(hyperparams.get("lr", 1e-3)))
         model.compile(optimizer=opt, loss="binary_crossentropy", metrics=["accuracy"])
         return model

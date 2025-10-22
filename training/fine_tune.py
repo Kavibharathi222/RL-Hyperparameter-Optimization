@@ -25,13 +25,23 @@ def training():
 
     print(f"✅ Loaded best hyperparameters: {best_hparams}")
 
+    # model = Sequential([
+    #     Embedding(input_dim=10000, output_dim=128, input_length=200),
+    #     Bidirectional(LSTM(64, return_sequences=False)),
+    #     Dropout(best_hparams["dropout"]),
+    #     Dense(64, activation="relu"),
+    #     Dropout(best_hparams["dropout"]),
+    #     Dense(1, activation="sigmoid")
+    # ])
     model = Sequential([
-        Embedding(input_dim=10000, output_dim=128, input_length=200),
-        Bidirectional(LSTM(64, return_sequences=False)),
-        Dropout(best_hparams["dropout"]),
-        Dense(64, activation="relu"),
-        Dropout(best_hparams["dropout"]),
-        Dense(1, activation="sigmoid")
+        # Embedding layer (can use pre-trained embeddings)
+        Embedding(input_dim=10000, output_dim=128, input_length=200, trainable=False),
+        
+        # BiLSTM layer with 200 units
+        Bidirectional(LSTM(200, dropout=best_hparams["dropout"], recurrent_dropout=0)),
+        
+        # Output layer
+        Dense(1, activation='sigmoid')
     ])
 
     opt = Adam(learning_rate=best_hparams["lr"])
