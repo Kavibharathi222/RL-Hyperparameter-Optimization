@@ -149,6 +149,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 from Preprocessing.feature_extraction import load_and_preprocess_imdb
 
 def training():
@@ -164,7 +165,7 @@ def training():
         best_hparams = pickle.load(f)
 
     model = Sequential([
-        Embedding(10000, 128, input_length=200, trainable=False),
+        Embedding(100, 128, input_length=200, trainable=False),
         Bidirectional(LSTM(200, dropout=best_hparams["dropout"])),
         Dense(1, activation="sigmoid")
     ])
@@ -189,6 +190,22 @@ def training():
         callbacks=[early_stop],
         verbose=1
     )
+    y_pred = model.predict(X_test)
+    y_pred_classes = (y_pred > 0.5).astype("int32")
 
     model.save("SavedModels/fine_tuned_model.keras")
+    precision = precision_score(y_test, y_pred_classes)
+    recall = recall_score(y_test, y_pred_classes)
+    f1 = f1_score(y_test, y_pred_classes)
+    accuracy = accuracy_score(y_test, y_pred_classes)
+
+    print("\n📈 Model Performance on Test Data:")
+    print(f"Precision : {precision:.4f}")
+    print(f"Recall    : {recall:.4f}")
+    print(f"F1 Score  : {f1:.4f}")
+    print(f"Accuracy  : {accuracy:.4f}")
     print("✅ Fine-tuned model saved")
+
+
+if __name__ == "__main__":
+  training()

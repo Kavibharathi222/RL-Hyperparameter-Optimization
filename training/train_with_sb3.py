@@ -60,7 +60,7 @@ model = DQN(
 # -----------------------------
 # Train
 # -----------------------------
-model.learn(total_timesteps=3000)
+model.learn(total_timesteps=30)
 
 # -----------------------------
 # Save best model

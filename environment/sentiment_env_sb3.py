@@ -1,6 +1,9 @@
 import gym
 from gym import spaces
 import numpy as np
+import os
+import pickle
+
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense
@@ -31,6 +34,9 @@ class SentimentEnvSB3(gym.Env):
         self.max_steps = max_steps
         self.target_accuracy = target_accuracy
         self.verbose = verbose
+        self.best_val_acc = 0.0
+        self.best_hparams = None
+
 
         # ---- Gym spaces ----
         self.action_space = spaces.Discrete(len(action_space_list))
@@ -59,6 +65,10 @@ class SentimentEnvSB3(gym.Env):
         self.step_count = 0
         self.prev_val_acc = 0.0
         self.prev_val_loss = 1.0
+        # self.step_count = 0
+        # self.prev_val_acc = 0.0
+        # self.prev_val_loss = 1.0
+
 
         default = self.action_space_list[0]
         self.model = self._build_model(default["lr"], default["dropout"])
@@ -101,6 +111,21 @@ class SentimentEnvSB3(gym.Env):
             self.step_count >= self.max_steps
             or val_acc >= self.target_accuracy
         )
+
+        # ------------------------
+# Save best hyperparameters
+# ------------------------
+        if val_acc > self.best_val_acc:
+            self.best_val_acc = val_acc
+            self.best_hparams = action
+
+            os.makedirs("SavedModels", exist_ok=True)
+            with open("SavedModels/best_hparams.pkl", "wb") as f:
+                pickle.dump(self.best_hparams, f)
+
+            if self.verbose:
+                print(f"[ENV] ✅ Best hyperparams saved: {self.best_hparams}")
+
 
         obs = np.array(
             [val_acc, val_loss, self.step_count],
