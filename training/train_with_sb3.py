@@ -4,6 +4,7 @@ from Preprocessing.feature_extraction import load_and_preprocess_imdb
 from environment.sentiment_env_sb3 import SentimentEnvSB3
 import pickle
 import os
+from training.fine_tune import training
 
 # -----------------------------
 # Load data
@@ -47,15 +48,19 @@ model = DQN(
     "MlpPolicy",
     env,
     learning_rate=1e-3,
-    buffer_size=5000,
-    learning_starts=100,
-    batch_size=32,
+    buffer_size=20,
+    learning_starts=1,
+    batch_size=4,
     gamma=0.95,
-    target_update_interval=500,
-    exploration_fraction=0.3,
-    exploration_final_eps=0.05,
-    verbose=1
+    target_update_interval=100,
+    train_freq=4,
+    gradient_steps=1,
+    exploration_fraction=0.2,
+    exploration_final_eps=0.1,
+    verbose=0,
+    policy_kwargs=dict(net_arch=[32, 32])
 )
+
 
 # -----------------------------
 # Train
@@ -69,3 +74,4 @@ os.makedirs("SavedModels", exist_ok=True)
 model.save("SavedModels/sb3_dqn_sentiment")
 
 print("✅ SB3 DQN training completed")
+training()

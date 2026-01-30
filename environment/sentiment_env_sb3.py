@@ -49,8 +49,8 @@ class SentimentEnvSB3(gym.Env):
     # ------------------------
     def _build_model(self, lr, dropout):
         model = Sequential([
-            Embedding(10000, 128, input_length=200, trainable=False),
-            Bidirectional(LSTM(200, dropout=dropout)),
+            Embedding(100, 128, input_length=200, trainable=False),
+            Bidirectional(LSTM(128, dropout=dropout)),
             Dense(1, activation="sigmoid")
         ])
         model.compile(
